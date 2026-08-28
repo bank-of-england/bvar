@@ -16,7 +16,7 @@ nav = [
   { "Concepts" = [{ "Conditioning on Observables vs Shocks" = "concepts/conditional_on_observables.md" }] },
   { "Notebooks" = [{ "Simulated Data" = "notebooks/simulated_data.md" }] },
   { "API Reference" = "api.md" },
-  { "Contributing" = "contributing.md" },
+  { "Contributing" = "https://github.com/bank-of-england/bvar/blob/main/CONTRIBUTING.md" },
 ]
 
 # KaTeX math rendering

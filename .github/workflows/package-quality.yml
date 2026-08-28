@@ -36,7 +36,7 @@ jobs:
       - name: Install package, development, and documentation dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev,docs,notebooks]" twine
+          python -m pip install -e ".[dev,docs,notebooks]" build twine
 
       - name: Build and inspect distribution
         run: |
