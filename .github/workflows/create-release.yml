@@ -1,0 +1,41 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  quality:
+    name: Run package quality checks
+    uses: ./.github/workflows/package-quality.yml
+    with:
+      ref: ${{ github.ref }}
+    permissions:
+      contents: read
+
+  release:
+    name: Create release
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" --title "bvar ${{ github.ref_name }}" --generate-notes --verify-tag
+
+      - name: Start publication and documentation workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          gh workflow run publish-pypi.yml --ref "$DEFAULT_BRANCH" --field ref="$RELEASE_TAG"
+          gh workflow run deploy-docs.yml --ref "$DEFAULT_BRANCH" --field ref="$RELEASE_TAG"

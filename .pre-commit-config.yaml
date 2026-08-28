@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.3
+    hooks:
+      - id: ruff
+        name: Run Ruff linter
+        args: [--fix]
+        additional_dependencies: []
+        language: system  # Use the system Python environment
+      - id: ruff-format
+        name: Run Ruff formatter
+        additional_dependencies: []
+        language: system  # Use the system Python environment
+
+  - repo: local
+    hooks:
+      - id: generate-api-docs
+        name: Generate API documentation
+        entry: python scripts/generate_api_docs.py
+        language: system
+        pass_filenames: false
+        files: ^(src/.*\.py|scripts/.*\.py|docs/api\.md)$
+      - id: convert-notebooks
+        name: Check generated notebook documentation
+        entry: python docs/convert_notebooks.py --check
+        language: system
+        pass_filenames: false
+        files: ^(notebooks/.*\.py|docs/notebooks/.*\.md|docs/convert_notebooks\.py)$
+      - id: pydoclint
+        name: Run pydoclint
+        entry: pydoclint src
+        language: system
+        pass_filenames: false
+      - id: pytest
+        name: Run pytest
+        entry: pytest
+        language: system
+        pass_filenames: false

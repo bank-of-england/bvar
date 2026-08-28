@@ -1,0 +1,121 @@
+# ============================================================================
+# Zensical configuration
+# ============================================================================
+
+[project]
+
+site_name = "Package bvar"
+site_description = "Bayesian Vector Autoregressions for macroeconomic forecasting"
+copyright = "Copyright &copy; Bank of England"
+
+nav = [
+  { "Home" = "index.md" },
+  { "User Guide" = [{ "Installation" = "guide/installation.md" }, { "Model Specification" = "guide/model_specification.md" }, { "Estimation" = "guide/estimation.md" }, { "Forecasting" = "guide/forecasting.md" }, { "Generalised IRFs" = "guide/girfs.md" }, { "Forecast Revision" = "guide/forecast_revision.md" }, { "Adding New Models" = "guide/adding_models.md" }] },
+  { "Models" = [{ "Overview" = "models/index.md" }, { "NaturalConjugate" = "models/natural_conjugate.md" }, { "IndependentNIW" = "models/independent_niw.md" }] },
+  { "Methods" = [{ "General Framework" = "methods/bvar_framework.md" }, { "Cross-Validation" = "methods/cross_validation.md" }, { "Skewed Constraints" = "methods/skewed_constraints.md" }, { "Nowcasting Uncertainty" = "methods/nowcasts_priors.md" }] },
+  { "Concepts" = [{ "Conditioning on Observables vs Shocks" = "concepts/conditional_on_observables.md" }] },
+  { "Notebooks" = [{ "Simulated Data" = "notebooks/simulated_data.md" }] },
+  { "API Reference" = "api.md" },
+  { "Contributing" = "contributing.md" },
+]
+
+# KaTeX math rendering
+extra_javascript = [
+  { path = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" },
+  { path = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" },
+  { path = "javascripts/katex.js" },
+]
+
+extra_css = [
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
+]
+
+[project.theme]
+language = "en"
+features = [
+  "announce.dismiss",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "content.footnote.tooltips",
+  "content.tabs.link",
+  "content.tooltips",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.instant.prefetch",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.top",
+  "search.highlight",
+  "search.suggest",
+  "navigation.tracking",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
+
+[project.plugins.mkdocstrings]
+default_handler = "python"
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["src"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "numpy"
+docstring_section_style = "spacy"
+show_source = false
+show_bases = false
+show_root_toc_entry = true
+heading_level = 3
+members_order = "source"
+separate_signature = true
+show_signature_annotations = true
+signature_crossrefs = true
+
+# ---------------------------------------------------------------------------
+# Markdown extensions
+# ---------------------------------------------------------------------------
+
+# Math
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
+
+# Code blocks
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+
+[project.markdown_extensions.pymdownx.inlinehilite]
+[project.markdown_extensions.pymdownx.superfences]
+[project.markdown_extensions.pymdownx.snippets]
+
+# Admonitions
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.pymdownx.details]
+
+# Lists & formatting
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
+
+[project.markdown_extensions.tables]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.md_in_html]
+
+[project.markdown_extensions.toc]
+permalink = true
