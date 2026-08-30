@@ -3,9 +3,7 @@ name: Package quality
 # Run quality checks for pull requests, branch pushes, or a manual run.
 on:
   pull_request:
-  push:
-    branches: ["**"]
-    tags-ignore: ["**"]
+    branches: [main, dev]
   workflow_dispatch:
   workflow_call:
     inputs:
