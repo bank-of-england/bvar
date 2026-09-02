@@ -1,4 +1,4 @@
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import version
 
 from .BVAR import BVAR
 from .diagnostics import mcmc_posterior

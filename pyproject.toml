@@ -55,7 +55,6 @@ dev = [
     "pre-commit",
     "pydoclint",
     "pyarrow",
-    "syrupy",
     "ruff",
     "pytest",
     "pytest-xdist",
