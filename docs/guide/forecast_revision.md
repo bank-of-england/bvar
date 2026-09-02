@@ -35,12 +35,23 @@ The `show` argument in `plot_delta_forecast` controls what is displayed: `"forec
 
 ```python
 import bvar as bv
+import numpy as np
+
+data, _, _, _ = bv.simulate_var(T=200, n=3, n_lags=2, levels=True, seed=42)
+data.columns = ["gdp", "cpi", "unemp"]
+transformations = {v: "qoq" for v in data.columns}
+
+bvar = bv.BVAR(n_lags=2, model=bv.NaturalConjugate(), stationary=False, random_state=0)
+bvar.optimise_hyperparameters(data)
+bvar.sample(data, N_draws=2000)
 
 # Step 1: produce and save the baseline (unconditional) forecast
 bvar.forecast(H=8, transformations=transformations, format=True)
-df_baseline = model.df_forecasts_unconditional.copy()
+df_baseline = bvar.df_forecasts_unconditional.copy()
 
 # Step 2: produce the alternative forecast with a constraint
+constraint_mean = np.full((8, bvar.n), np.nan)
+constraint_mean[:, 0] = data["gdp"].iloc[-1]
 bvar.forecast(
     H=8,
     constraint_mean=constraint_mean,

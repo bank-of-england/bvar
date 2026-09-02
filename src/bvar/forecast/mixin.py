@@ -130,11 +130,20 @@ class Forecasting:
         self : Forecasting
             The BVAR object with forecasts stored in self.forecast_unconditional
             (shape: N_draws x (T+H) x n).
+
+        Raises
+        ------
+        RuntimeError
+            If the model has no posterior draws (``sample()`` was not called).
         """
         H = self._validate_horizon(H)
         n = self.n
 
         N_draws = self._validate_n_draws(N_draws)
+        if not self.is_fitted:
+            raise RuntimeError(
+                "No posterior draws available. Call sample() before forecast()."
+            )
         if random_state is not None:
             self.rng = np.random.default_rng(random_state)
 
@@ -288,6 +297,8 @@ class Forecasting:
 
         Raises
         ------
+        RuntimeError
+            If the model has no posterior draws (``sample()`` was not called).
         ValueError
             If forecast constraints, draw counts, or transformations are invalid.
 
@@ -300,6 +311,10 @@ class Forecasting:
         """
         H = self._validate_horizon(H)
         N_draws = self._validate_n_draws(N_draws)
+        if not self.is_fitted:
+            raise RuntimeError(
+                "No posterior draws available. Call sample() before forecast()."
+            )
         if constraint_mean is not None:
             validate_constraint_inputs(
                 constraint_mean,

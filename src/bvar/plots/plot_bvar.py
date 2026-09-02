@@ -8,6 +8,7 @@ as a mixin class for the BVAR model.
 
 from typing import Optional
 
+import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -22,7 +23,7 @@ class PlotBVAR:
         max_cols: int = 3,
         figsize_per_plot: tuple = (5, 3),
         var_names: Optional[str | list[str]] = None,
-    ) -> None:
+    ) -> matplotlib.figure.Figure:
         """
         Plot fitted values with credible intervals against actual data.
 
@@ -36,6 +37,11 @@ class PlotBVAR:
             Size of each subplot (width, height).
         var_names : Optional[str | list[str]]
             Column name(s) to plot. If ``None``, the method plots every series.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The figure containing the fitted-value subplots.
 
         Raises
         ------
@@ -126,7 +132,7 @@ class PlotBVAR:
         for j in range(n_series, len(axes)):
             fig.delaxes(axes[j])
 
-        plt.show()
+        return fig
 
     def plot_forecast(
         self,
@@ -135,7 +141,7 @@ class PlotBVAR:
         figsize_per_plot: tuple = (5, 3),
         var_names: Optional[str | list[str]] = None,
         from_date: Optional[pd.Period | str] = None,
-    ) -> None:
+    ) -> matplotlib.figure.Figure:
         """
         Plot forecast means and credible intervals for each series.
 
@@ -152,6 +158,11 @@ class PlotBVAR:
             Column name(s) to plot. If ``None``, the method plots every series.
         from_date : Optional[pd.Period | str]
             Starting date for the forecast plot. If None, uses default date range.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The figure containing the forecast subplots.
 
         Raises
         ------
@@ -257,4 +268,4 @@ class PlotBVAR:
         for j in range(n_series, len(axes)):
             fig.delaxes(axes[j])
 
-        plt.show()
+        return fig

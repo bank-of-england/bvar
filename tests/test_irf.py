@@ -32,9 +32,19 @@ Sigma = np.array([[1.0, 0.4, 0.1], [0.4, 2.0, 0.3], [0.1, 0.3, 1.5]])
 data, _, true_sigma, _ = bv.simulate_var(T, n, p, ar_mat=ar_mat, Sigma=Sigma, seed=0)
 
 priors = bv.NaturalConjugate(minnesota=True, soc=False, sur=False, covid=False)
-model = bv.BVAR(p, priors, stationary=True, optimisation_method="none")
-model.sample(data, N_draws=N_DRAWS, progressbar=False, random_state=0)
-model.compute_girf(H=H, N_draws=N_DRAWS, progressbar=False)
+
+
+@pytest.fixture(scope="module")
+def model():
+    m = bv.BVAR(
+        p,
+        bv.NaturalConjugate(minnesota=True, soc=False, sur=False, covid=False),
+        stationary=True,
+        optimisation_method="none",
+    )
+    m.sample(data, N_draws=N_DRAWS, progressbar=False, random_state=0)
+    m.compute_girf(H=H, N_draws=N_DRAWS, progressbar=False)
+    return m
 
 
 # ---------------------------------------------------------------------------
@@ -88,15 +98,15 @@ def test_girf_shape():
 # ---------------------------------------------------------------------------
 
 
-def test_irf_draws_shape():
+def test_irf_draws_shape(model):
     assert model.irf_draws.shape == (N_DRAWS, H + 1, n, n)
 
 
-def test_irf_summary_keys():
+def test_irf_summary_keys(model):
     assert set(model.irf_summary.keys()) == {0.16, 0.50, 0.84}
 
 
-def test_natural_unit_shock_size_is_fixed_across_posterior_draws():
+def test_natural_unit_shock_size_is_fixed_across_posterior_draws(model):
     test_model = deepcopy(model)
     shock_var = test_model.df_data.columns[0]
     shock_natural = 0.25
@@ -113,7 +123,7 @@ def test_natural_unit_shock_size_is_fixed_across_posterior_draws():
     )
 
 
-def test_raw_response_keeps_logged_girf_in_model_units():
+def test_raw_response_keeps_logged_girf_in_model_units(model):
     raw = np.array([[[[1.0]], [[2.0]]]])
     data = np.array([[np.log(100.0)]])
     df_data = model.df_data.iloc[:1, :1].copy()
@@ -137,7 +147,7 @@ def test_raw_response_keeps_logged_girf_in_model_units():
     np.testing.assert_array_equal(transformed, raw)
 
 
-def test_log_diff_level_change_uses_supplied_base_value():
+def test_log_diff_level_change_uses_supplied_base_value(model):
     raw = np.array([[[[0.1]]]])
     data = np.array([[0.01]])
     df_data = model.df_data.iloc[:1, :1].copy()
@@ -155,7 +165,7 @@ def test_log_diff_level_change_uses_supplied_base_value():
     np.testing.assert_allclose(level_changes, raw * 100.0)
 
 
-def test_log_diff_level_change_requires_base_value():
+def test_log_diff_level_change_requires_base_value(model):
     raw = np.array([[[[0.1]]]])
     data = np.array([[0.01]])
     df_data = model.df_data.iloc[:1, :1].copy()
@@ -173,7 +183,9 @@ def test_log_diff_level_change_requires_base_value():
         ("pct_change_yoy", [10.0, 30.0]),
     ],
 )
-def test_diff_absolute_responses_use_supplied_level_base(response_type, expected):
+def test_diff_absolute_responses_use_supplied_level_base(
+    model, response_type, expected
+):
     raw = np.array([[[[10.0]], [[20.0]]]])
     data = np.array([[2.0]])
     df_data = model.df_data.iloc[:1, :1].copy()
@@ -197,7 +209,7 @@ def test_diff_absolute_responses_use_supplied_level_base(response_type, expected
 @pytest.mark.parametrize(
     "response_type", ["level_change", "pct_change", "change_yoy", "pct_change_yoy"]
 )
-def test_compute_girf_diff_absolute_response_requires_base_value(response_type):
+def test_compute_girf_diff_absolute_response_requires_base_value(model, response_type):
     var_name = model.df_data.columns[0]
 
     with pytest.raises(ValueError, match="base_value.*diff"):
@@ -210,7 +222,7 @@ def test_compute_girf_diff_absolute_response_requires_base_value(response_type):
         )
 
 
-def test_logs_level_change_uses_exponentiated_observation():
+def test_logs_level_change_uses_exponentiated_observation(model):
     raw = np.array([[[[0.1]]]])
     data = np.array([[np.log(100.0)]])
     df_data = model.df_data.iloc[:1, :1].copy()
@@ -228,7 +240,7 @@ def test_logs_level_change_uses_exponentiated_observation():
     np.testing.assert_allclose(level_changes, raw * 100.0)
 
 
-def test_compute_girf_uses_stored_transformations_and_copies_metadata():
+def test_compute_girf_uses_stored_transformations_and_copies_metadata(model):
     var_name = model.df_data.columns[0]
     stored_transformations = {var_name: "logs"}
     response_type = {var_name: "level_change"}
@@ -268,7 +280,7 @@ def test_compute_girf_uses_stored_transformations_and_copies_metadata():
     )
 
 
-def test_compute_girf_log_diff_level_change_uses_base_value():
+def test_compute_girf_log_diff_level_change_uses_base_value(model):
     var_name = model.df_data.columns[0]
     raw_model = deepcopy(model)
     raw_model.compute_girf(
@@ -295,7 +307,7 @@ def test_compute_girf_log_diff_level_change_uses_base_value():
     )
 
 
-def test_compute_girf_log_diff_level_change_requires_base_value():
+def test_compute_girf_log_diff_level_change_requires_base_value(model):
     var_name = model.df_data.columns[0]
     test_model = deepcopy(model)
     previous_horizon = test_model.irf_H
@@ -323,6 +335,7 @@ def test_normalise_base_values_rejects_non_finite_values(base_value):
 
 @pytest.mark.parametrize("base_value", [0.0, -1.0, np.nan, np.inf, -np.inf])
 def test_compute_girf_rejects_invalid_log_diff_base_before_state_mutation(
+    model,
     base_value,
 ):
     var_name = model.df_data.columns[0]
@@ -344,7 +357,7 @@ def test_compute_girf_rejects_invalid_log_diff_base_before_state_mutation(
     np.testing.assert_array_equal(test_model.irf_draws, previous_irf_draws)
 
 
-def test_compute_girf_rejects_nonpositive_log_diff_per_variable_base():
+def test_compute_girf_rejects_nonpositive_log_diff_per_variable_base(model):
     test_model = deepcopy(model)
     test_model.df_data = test_model.df_data.copy()
     test_model.df_data.columns = ["first", "second", "third"]
@@ -365,6 +378,7 @@ def test_compute_girf_rejects_nonpositive_log_diff_per_variable_base():
 
 @pytest.mark.parametrize("transformation", ["log_diff_extra", "diff-log"])
 def test_compute_girf_rejects_malformed_transformation_before_state_mutation(
+    model,
     transformation,
 ):
     var_name = model.df_data.columns[0]
@@ -387,6 +401,7 @@ def test_compute_girf_rejects_malformed_transformation_before_state_mutation(
 
 @pytest.mark.parametrize("use_explicit_metadata", [False, True])
 def test_compute_girf_resolves_integer_keyed_transformations(
+    model,
     use_explicit_metadata,
 ):
     test_model = deepcopy(model)
@@ -425,7 +440,7 @@ def test_compute_girf_resolves_integer_keyed_transformations(
     )
 
 
-def test_compute_girf_does_not_treat_boolean_metadata_key_as_integer_index():
+def test_compute_girf_does_not_treat_boolean_metadata_key_as_integer_index(model):
     bool_key_model = deepcopy(model)
     bool_key_model.df_data = bool_key_model.df_data.copy()
     bool_key_model.df_data.columns = ["first", "second", "third"]
@@ -485,24 +500,24 @@ def test_periods_per_year_rejects_non_positive_multiplier():
 
 
 @pytest.mark.parametrize("H", [True, 1.5, -1])
-def test_compute_girf_rejects_invalid_horizon(H):
+def test_compute_girf_rejects_invalid_horizon(model, H):
     with pytest.raises(ValueError, match="H must be a non-negative integer"):
         model.compute_girf(H=H, N_draws=1, progressbar=False)
 
 
 @pytest.mark.parametrize("N_draws", [True, 1.5, 0, -1])
-def test_compute_girf_rejects_invalid_draw_count(N_draws):
+def test_compute_girf_rejects_invalid_draw_count(model, N_draws):
     with pytest.raises(ValueError, match="N_draws must be a positive integer"):
         model.compute_girf(H=0, N_draws=N_draws, progressbar=False)
 
 
-def test_compute_girf_accepts_zero_horizon_and_caps_draws():
+def test_compute_girf_accepts_zero_horizon_and_caps_draws(model):
     test_model = deepcopy(model)
     test_model.compute_girf(H=0, N_draws=N_DRAWS + 100, progressbar=False)
     assert test_model.irf_draws.shape == (N_DRAWS, 1, n, n)
 
 
-def test_order_invariance():
+def test_order_invariance(model):
     """
     GIRFs are order-invariant: fitting the same model with variables in reverse
     order should produce the same responses (up to reordering of rows/columns).
@@ -535,7 +550,7 @@ def test_not_fitted_raises():
 # ---------------------------------------------------------------------------
 
 
-def test_dataframe_shape():
+def test_dataframe_shape(model):
     df = model.irf_df
     # (H+1) horizons * n shocks * n responses * 3 quantiles
     assert len(df) == (H + 1) * n * n * 3
@@ -547,13 +562,13 @@ def test_dataframe_shape():
 # ---------------------------------------------------------------------------
 
 
-def test_plot_returns_figure():
+def test_plot_returns_figure(model):
     fig = model.plot_girf()
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
 
-def test_plot_subset():
+def test_plot_subset(model):
     fig = model.plot_girf(shock_var=0, response_var=[0, 1])
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
@@ -564,7 +579,7 @@ def test_plot_subset():
 # ---------------------------------------------------------------------------
 
 
-def test_girf_conditional_forecast_consistency():
+def test_girf_conditional_forecast_consistency(model):
     """
         The GIRF is the difference between two point forecasts:
             - uncond: the unconditional point forecast from the current history

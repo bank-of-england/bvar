@@ -1,11 +1,5 @@
 # Changelog
 
-All notable changes to `bvar` are documented here.
-
-## Unreleased
-
-No changes recorded yet.
-
 ## 0.3.1
 
 First public release.

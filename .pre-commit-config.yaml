@@ -21,8 +21,8 @@ repos:
         pass_filenames: false
         files: ^(src/.*\.py|scripts/.*\.py|docs/api\.md)$
       - id: convert-notebooks
-        name: Check generated notebook documentation
-        entry: python docs/convert_notebooks.py --check
+        name: Regenerate notebook documentation
+        entry: python docs/convert_notebooks.py
         language: system
         pass_filenames: false
         files: ^(notebooks/.*\.py|docs/notebooks/.*\.md|docs/convert_notebooks\.py)$

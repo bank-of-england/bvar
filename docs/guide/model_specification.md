@@ -53,13 +53,13 @@ import numpy as np
 import bvar as bv
 
 # Apply log to real variables, keep rates in levels
-data_transformation = {
-    "gdp": "logs",
-    "cpi": "logs",
-    "rrate": "levels",
-}
+data_transformation = {"gdp": "logs", "cpi": "logs", "rrate": "levels"}
 
-data = data.apply(lambda x: np.log(x) if data_transformation[x.name] == "logs" else x)
+data = data.apply(
+    lambda col: (
+        np.log(col) if data_transformation.get(col.name, "levels") == "logs" else col
+    )
+)
 ```
 
 Then specify the sampling model and build the BVAR:
@@ -102,7 +102,9 @@ In conditional forecasting, `constraint_variance` values of exactly zero for a c
 
 ### Stationary Flag and Dummy-Observation Priors
 
-The `stationary` flag passed to `BVAR` determines which variables are treated as being in levels (`vars_in_levels`). The sum-of-coefficients (`soc`) and single-unit-root (`sur`) dummy-observation priors are only meaningful for variables in levels: if `stationary=True` for all variables (i.e. none are in levels), the effective `soc`/`sur` flags used during sampling are switched off for that fit, even if requested on the model, because the corresponding dummy observations would not be economically meaningful for a fully-differenced/stationary system.
+`stationary` is a single system-wide boolean, not a per-variable setting. `stationary=False` treats every series as I(1) (random-walk prior mean of 1 on the first own lag); `stationary=True` treats every series as I(0) (prior mean 0) and disables `soc`/`sur` for that fit even if requested on the model, because sum-of-coefficients / single-unit-root dummies are only meaningful for levels data.
+
+For mixed I(1)/I(0) data, difference the I(1) series yourself, pass `stationary=True`, and record the transform in `data_transformation`; or keep everything in levels with `stationary=False` and accept the random-walk prior on the stationary series.
 
 ## References
 

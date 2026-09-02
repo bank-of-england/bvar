@@ -25,7 +25,7 @@ def plot_delta_forecast(
     n_rows: int = 1,
     metric_labels: Optional[dict] = None,
     extra_data: Optional[pd.DataFrame] = None,
-) -> None:
+) -> matplotlib.figure.Figure:
     """
     Plot forecast comparisons from the DataFrame produced by ``compare_forecasts``.
 
@@ -51,12 +51,17 @@ def plot_delta_forecast(
     extra_data : Optional[pd.DataFrame]
         Long-format DataFrame with columns ``[date, variable, value]`` (and
         optionally ``series`` and ``quantile``) drawn as extra dashed line(s)
-        per subplot when ``show="forecasts"`` (e.g. the mpr forecast). If a
+        per subplot when ``show="forecasts"`` (e.g. an external published
+        projection). If a
         ``series`` column is present, one line is drawn per series and labelled
         with its name; otherwise a single line labelled ``"extra"`` is drawn.
-        The method aligns dates to the plotted timeline and ignores dates outside
-        the axis.
+        Dates are aligned to the plotted timeline; dates outside the axis are
         ignored.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure containing the forecast-revision subplots.
 
     Raises
     ------
@@ -152,7 +157,7 @@ def plot_delta_forecast(
         ax.axis("off")
 
     fig.suptitle(title)
-    plt.show()
+    return fig
 
 
 def plot_density(

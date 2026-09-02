@@ -5,9 +5,7 @@ import bvar as bv
 
 
 def test_stationary_bvar_estimation():
-    """
-    Runs the example in BVAR.py main() to ensure it completes without error.
-    """
+    """Estimate a stationary BVAR on simulated data; posterior means recover the true coefficients and covariance."""
 
     # Generate synthetic data
     T = 1000  # Time periods
@@ -110,11 +108,15 @@ def test_nonstationary_bvar_estimation():
     bvar.optimise_hyperparameters(data, nb_restart=0, random_state=seed)
     bvar.sample(data, N_draws=1000, random_state=seed)
 
+    beta_mean = bvar.beta.mean(axis=0)
+    sigma_mean = bvar.sigma.mean(axis=0).reshape(n, n)
+    assert np.isfinite(beta_mean).all()
+    assert np.all(np.linalg.eigvalsh(sigma_mean) > 0)
+    assert np.mean(np.abs(sigma_mean.flatten() - true_sigma.flatten())) < 0.5
+
 
 def test_stationary_bvar_estimation_cv():
-    """
-    Runs the example in BVAR.py main() to ensure it completes without error.
-    """
+    """Estimate a stationary BVAR with cross-validated hyperparameters; posterior means recover the true coefficients and covariance."""
 
     # Generate synthetic data
     T = 1000  # Time periods
@@ -159,9 +161,7 @@ def test_stationary_bvar_estimation_cv():
 
 
 def test_stationary_bvar_estimation_covid():
-    """
-    Runs the example in BVAR.py main() to ensure it completes without error.
-    """
+    """Estimate a stationary BVAR with COVID dummies; posterior means recover the true coefficients and covariance."""
 
     # Generate synthetic data
     T = 200  # Time periods

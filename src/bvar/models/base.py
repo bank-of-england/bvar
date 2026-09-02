@@ -273,13 +273,16 @@ class SamplingModel(ABC):
     Parameters
     ----------
     minnesota : bool
-        Whether to use the Minnesota prior.
+        Apply Minnesota shrinkage to the coefficient prior. Default ``True``;
+        with ``False`` the coefficient prior is effectively flat.
     soc : bool
-        Whether to use the sum-of-coefficients prior.
+        Add sum-of-coefficients dummy observations. Default ``True``. Disabled
+        for a fit when ``stationary=True`` is passed to ``BVAR``.
     sur : bool
-        Whether to use the single-unit-root prior.
+        Add a single-unit-root dummy observation. Default ``True``. Disabled
+        for a fit when ``stationary=True`` is passed to ``BVAR``.
     covid : bool
-        Whether to include COVID dummies.
+        Include COVID-19 outlier dummies. Default ``False``.
     covid_dates : Optional[list]
         Two-element list ``[start, end]`` defining the COVID period. Each
         element may be anything pandas can interpret as a date (e.g. a

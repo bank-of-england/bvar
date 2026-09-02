@@ -223,6 +223,10 @@ class BVAR(Forecasting, GIRF, PlotBVAR, PlotGIRF, GridSearch):
         self.data_transformation: Optional[dict] = None
         self.extras: Optional[list] = None
         self.fitted_values: Optional[np.ndarray] = None
+        self.forecast_unconditional: Optional[np.ndarray] = None
+        self.forecast_conditional: Optional[np.ndarray] = None
+        self.df_forecasts_unconditional: Optional[pd.DataFrame] = None
+        self.df_forecasts_conditional: Optional[pd.DataFrame] = None
 
     def __repr__(self) -> str:
         return (
@@ -400,8 +404,8 @@ class BVAR(Forecasting, GIRF, PlotBVAR, PlotGIRF, GridSearch):
         """
         Optimise prior hyperparameters using the specified method.
 
-        This method modifies the priors.pars attribute in place based on the
-        optimisation_method set during initialisation.
+        This method updates ``self.model.pars`` in place based on the
+        ``optimisation_method`` set during initialisation.
 
         Parameters
         ----------
@@ -410,15 +414,15 @@ class BVAR(Forecasting, GIRF, PlotBVAR, PlotGIRF, GridSearch):
             the index should be a regularly-spaced pd.PeriodIndex or
             pd.DatetimeIndex (any frequency, not only quarterly).
         nb_restart : int
-            Number of random restarts for the BFGS optimiser to avoid local minima.
+            Number of random restarts for the L-BFGS-B optimiser to avoid local minima.
             Default is 0 (single optimisation run).
         initial_values : Optional[np.ndarray]
             Initial hyperparameter values. If ``None``, the method starts from
             default values with small random perturbations.
         target_series : Optional[list[str]]
-            Series names for CV error minimisation (only for
-            k-fold, rolling_oos, and cross_validation methods). If ``None``,
-            the method uses every series.
+            Series names to target when scoring cross-validation error (used
+            only when ``optimisation_method="cross_validation"``). If ``None``,
+            the method averages predictive accuracy over every series.
         cv_options : Optional[dict]
             Settings for cross-validation methods (e.g., number of folds,
             window size).
@@ -438,7 +442,8 @@ class BVAR(Forecasting, GIRF, PlotBVAR, PlotGIRF, GridSearch):
         Returns
         -------
         None
-            The method updates ``prior.pars`` with optimised hyperparameters.
+            The method updates ``self.model.pars`` with the optimised
+            hyperparameters.
 
         Raises
         ------
@@ -552,6 +557,7 @@ class BVAR(Forecasting, GIRF, PlotBVAR, PlotGIRF, GridSearch):
                 cv_options=cv_options,
                 target_indices=target_indices,
                 random_state=rng,
+                progressbar=True,
             )
 
             self.target_series = target_series

@@ -30,11 +30,11 @@ Sigma = np.eye(n)
 Sigma[0, 1] = 0.95
 Sigma[1, 0] = 0.95
 data, true_b, true_sigma, _ = bv.simulate_var(
-    T,
-    n,
-    p,
-    covid,
-    levels,
+    T=T,
+    n=n,
+    n_lags=p,
+    covid=covid,
+    levels=levels,
     ar_mat=ar_mat,
     Sigma=Sigma,
     constant=constant,
@@ -65,9 +65,9 @@ model = bv.NaturalConjugate(
 
 # Create a BVAR instance by combining data with model and features like number of lags. The data should a pandas dataframe.
 bvar = bv.BVAR(
-    p,
-    model,
-    not levels,
+    n_lags=p,
+    model=model,
+    stationary=not levels,
     optimisation_method="ml",
     random_state=123,
 )

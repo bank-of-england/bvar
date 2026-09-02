@@ -1,3 +1,5 @@
+# Conditioning on Observables vs Shocks
+
 ## Conditioning Approaches: Observables vs. Shocks
 
 Conditional forecasting and scenario analysis distinguish between **conditioning on observables** and **conditioning on shocks**.

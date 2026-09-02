@@ -17,6 +17,18 @@ See [Adding New Models](adding_models.md#optional-predictive-hooks) for the full
 
 ## Unconditional Forecasts
 
+All snippets on this page continue from:
+
+```python
+import bvar as bv, numpy as np
+
+data, _, _, _ = bv.simulate_var(T=200, n=4, n_lags=2, levels=True, seed=42)
+data.columns = ["gdp", "cpi", "unemp", "rrate"]
+bvar = bv.BVAR(n_lags=2, model=bv.NaturalConjugate(), stationary=False, random_state=42)
+bvar.optimise_hyperparameters(data)
+bvar.sample(data, N_draws=5000)
+```
+
 An unconditional $H$-step forecast iterates the VAR forward from the last observed data point:
 
 $$\hat{y}_{T+h} = \hat{c} + \hat{A}_1 \hat{y}_{T+h-1} + \cdots + \hat{A}_p \hat{y}_{T+h-p} + \varepsilon_{T+h}$$
@@ -121,7 +133,7 @@ Two other framework features rely on the same predictive hooks as forecasting:
 
 ## Reproducibility
 
-Passing a fixed `random_state` (or `rng`) to `forecast`/`recursive_forecast` gives results that are reproducible within a single installed release of the package. This is **not** guaranteed across releases: a change to a model's posterior sampler or innovation implementation — such as the consolidation of posterior updates around `sample_posterior_state` in 0.3.0 — can change the sequence of draws consumed from a given seed even though the underlying distributions are unchanged. Pin the package version if bit-for-bit reproducibility across environments or over time is required.
+Passing a fixed `random_state` (or `rng`) to `forecast`/`recursive_forecast` gives results that are reproducible within a single installed release of the package. This is **not** guaranteed across releases: a change to a model's posterior sampler or innovation implementation — such as the consolidation of posterior updates around `sample_posterior_state` before the first public release — can change the sequence of draws consumed from a given seed even though the underlying distributions are unchanged. Pin the package version if bit-for-bit reproducibility across environments or over time is required.
 
 ## References
 

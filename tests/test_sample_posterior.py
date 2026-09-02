@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import bvar as bv
 from bvar.BVAR import BVAR
 from bvar.models import IndependentNIW, NaturalConjugate
 from bvar.models.base import PosteriorState, SamplingModel, SamplingResult
@@ -768,3 +769,11 @@ def test_independent_niw_conditional_forecast_carries_state_forward(monkeypatch)
     # Each later call must carry forward the previous call's returned sigma.
     for i in range(1, N_draws):
         np.testing.assert_allclose(calls[i][1], returns[i - 1][1])
+
+
+def test_independent_niw_hyperparameter_grid_and_vector():
+    m = bv.IndependentNIW(minnesota=True, soc=False, sur=False)
+    grid = m.hyperparameter_grid()
+    assert len(grid) >= 1
+    v = np.array([np.asarray(g).ravel()[0] for g in grid], dtype=float)
+    m.fill_in_from_vector(v)

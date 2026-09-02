@@ -174,8 +174,8 @@ import numpy as np
 from typing import Optional
 from scipy.stats import invwishart
 
-from ..base import PosteriorState, SamplingModel, SamplingResult
-from ...utils import construct_Y_Z, get_dimensions
+from bvar.models import PosteriorState, SamplingModel, SamplingResult
+from bvar.utils import construct_Y_Z, get_dimensions
 
 
 class FlatPrior(SamplingModel):
@@ -302,6 +302,10 @@ class FlatPrior(SamplingModel):
 ```
 
 ### Wire it up
+
+This step is optional. A `SamplingModel` subclass instance can be passed
+straight to `BVAR(...)` without editing any package `__init__.py` files;
+wiring it up only makes the class importable as `bv.FlatPrior`.
 
 Expose the new class from the models package and optionally from the top-level namespace:
 

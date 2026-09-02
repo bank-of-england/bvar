@@ -2,6 +2,8 @@
 
 The `NaturalConjugate` model implements Bayesian VAR estimation with a **Natural-Conjugate Normal-Inverse-Wishart** prior. Conjugacy gives a closed-form posterior, so the model needs neither MCMC nor burn-in. This makes it a fast and versatile option for most applications.
 
+Constructor arguments (`minnesota`, `soc`, `sur`, `covid`, `covid_dates`) are documented on [`SamplingModel`](index.md#bvar.models.SamplingModel); `soc` and `sur` default to `True`.
+
 ## Prior Structure
 
 The prior is specified jointly over the coefficients and the covariance matrix:

@@ -1,25 +1,5 @@
 # Bayesian Vector Autoregression (BVAR) Framework
 
-## Table of Contents
-
-- [Introduction](#introduction)
-- [VAR Model](#var-model)
-- [Bayesian Framework](#bayesian-framework)
-  - [Likelihood](#likelihood)
-  - [Prior Distributions](#prior-distributions)
-  - [Posterior Distributions](#posterior-distributions)
-- [Prior Specifications](#prior-specifications)
-  - [Minnesota Prior](#minnesota-prior)
-  - [Sum-of-Coefficients Prior](#sum-of-coefficients-prior)
-  - [Single-Unit-Root Prior](#single-unit-root-prior)
-  - [COVID-19 Dummies](#covid-19-dummies)
-- [Hyperparameter Optimisation](#hyperparameter-optimisation)
-- [Forecasting](#forecasting)
-  - [Unconditional Forecasts](#unconditional-forecasts)
-  - [Conditional Forecasts](#conditional-forecasts)
-- [Model-Owned Predictive State and Capability Boundaries](#model-owned-predictive-state-and-capability-boundaries)
-- [References](#references)
-
 ## Introduction
 
 This library implements Bayesian Vector Autoregressions (BVARs) with natural conjugate (Normal-Inverse-Wishart) priors. The Bayesian approach regularises the large number of VAR parameters through economically motivated shrinkage, making the model well suited to macroeconomic forecasting.
@@ -153,17 +133,17 @@ The `forecast()` method also supports conditional forecasting — imposing const
 
 **Structural representation.** Using the Cholesky factor $A_0 = \text{chol}(\Sigma)'$, the $H$-step forecast is written as:
 
-$$y_{T+1:T+H} = b + \mathcal{M}\, \varepsilon$$
+$$y_{T+1:T+H} = b + \mathcal{M}^{\top} \varepsilon$$
 
-where $b$ is the deterministic component (intercepts and lagged values), $\varepsilon$ is the $(nH \times 1)$ vector of structural shocks, and $\mathcal{M}$ is block lower-triangular with blocks $M_h$ built recursively from the impulse responses:
+where $b$ is the deterministic component (intercepts and lagged values), $\varepsilon$ is the $(nH \times 1)$ vector of structural shocks, and $\mathcal{M}$ is the block lower-triangular impulse-response matrix with blocks $M_h$ built recursively (matching the [skewed constraints](skewed_constraints.md) page):
 
-$$M_0 = A_0, \qquad M_h = A_0 + \sum_{j=1}^{\min(h,p)} M_{h-j}\, B_j$$
+$$M_0 = A_0, \qquad M_h = \sum_{j=1}^{\min(h,p)} M_{h-j}\, B_j \quad (h \ge 1)$$
 
 **Constraints.** A selection matrix $C$ and target vector $f$ encode the conditions $C\, y_{T+1:T+H} = f$. The structural shocks consistent with the constraints are:
 
 $$\varepsilon = \xi + D^*(z - D\xi)$$
 
-where $\xi \sim \mathcal{N}(0, I_{nH})$ is an unconstrained shock draw, $D = C\mathcal{M}'$, $D^* = (D'D)^{-1}D'$, and $z$ is drawn from the constraint distribution.
+where $\xi \sim \mathcal{N}(0, I_{nH})$ is an unconstrained shock draw, $D = C\mathcal{M}'$, $D^{*} = D'(DD')^{-1}$ is the Moore-Penrose pseudo-inverse of $D$, and $z$ is drawn from the constraint distribution.
 
 **Hard constraints** set $z = f - Cb$ exactly. **Soft constraints** draw $z$ from a normal (or skew-normal) distribution centred on the target, allowing constraints subject to uncertainty. See the [skewed constraints documentation](skewed_constraints.md) for details.
 
@@ -208,7 +188,9 @@ model = bv.NaturalConjugate(
 )
 
 # --- 3. Create the BVAR and optimise hyperparameters ---
-bvar = bv.BVAR(n_lags=2, model=model, stationary=False, optimisation_method="ml")
+bvar = bv.BVAR(
+    n_lags=2, model=model, stationary=False, optimisation_method="ml", random_state=42
+)
 bvar.optimise_hyperparameters(data)
 
 # --- 4. Sample from the posterior ---

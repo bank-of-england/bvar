@@ -33,7 +33,14 @@ where:
 
 ## Algorithm: Shock Adjustment with Constraint Sampling
 
-The implemented method, which `forecast()` uses by default, avoids numerical instability and reduces computation time.
+This is the algorithm `forecast()` runs by default (`method="andersson_et_al"`), following Algorithm 1 of Andersson, Palmqvist & Waggoner (2010).
+
+### Choosing `method`
+
+| `method=` | Algorithm | Use for |
+|---|---|---|
+| `"andersson_et_al"` (default) | Shock adjustment (this page) | General use. |
+| `"antolin_diaz_et_al"` | Affine transform of the skew-normal | Cross-check; can be non-PD under very tight variance constraints. |
 
 ### Key Idea
 
@@ -59,7 +66,7 @@ where $z$ represents the target value for $Cy - Cb = D\varepsilon$ (with $D = CM
 
 $$\varepsilon = \xi + D^{*}(z - D\xi)$$
 
-where $D^{*} = (D^T D)^{-1}D^T$ is the Moore–Penrose inverse of $D$.
+where $D^{*} = D^T (D D^T)^{-1}$ is the Moore-Penrose pseudo-inverse of the wide, full-row-rank matrix $D$ (computed via SVD, `numpy.linalg.pinv`).
 
 **Step 4: Compute the forecast**
 
@@ -188,7 +195,7 @@ where the shape parameter transforms according to equation (10) of Azzalini & Ca
 
 **Drawback:** Computing the posterior shock covariance $\Omega_\varepsilon = D^{*}\Sigma_f(D^{*})^T + I - D^{*}DD^T(D^{*})^T$ can produce non-positive-definite matrices when variance constraints are very tight, causing numerical instability.
 
-### Method 2: Null Space Decomposition (Andersson, Palmqvist & Waggoner, 2010)
+### Reference algorithm: explicit null-space decomposition
 
 Decomposes the shock vector into constrained and unconstrained components using the null space of $D$:
 
@@ -207,7 +214,13 @@ import numpy as np
 import bvar as bv
 
 # Estimate model
-bvar = bv.BVAR(n_lags=2, model=bv.NaturalConjugate(minnesota=True), stationary=False)
+bvar = bv.BVAR(
+    n_lags=2,
+    model=bv.NaturalConjugate(minnesota=True, soc=True, sur=True),
+    stationary=False,
+    random_state=42,
+)
+# default hyperparameters (no optimise_hyperparameters call) to keep the example short
 bvar.sample(data, N_draws=5000)
 
 # Set up constraints: fix GDP growth at 2% for next 2 quarters
@@ -233,7 +246,9 @@ bvar.forecast(
 )
 
 # Extract results
-y_cond = bvar.forecast_conditional  # Shape: (5000-2500, T+H, n) after burn-in
+y_cond = (
+    bvar.forecast_conditional
+)  # Shape: (min(N_draws, self.N_draws) - N_burn, T+H, n)
 ```
 
 ---

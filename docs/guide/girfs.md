@@ -43,23 +43,35 @@ When `data_transformation` is omitted, GIRFs use the mapping supplied to
 the complete-period floor for non-divisors, so `5M` represents 2 periods per year.
 
 ```python
-# Compute GIRFs: most variables in yoy pct change, rates in level change
+import bvar as bv
+
+data, _, _, _ = bv.simulate_var(T=200, n=4, n_lags=2, levels=True, seed=42)
+data.columns = ["gdp", "cpi", "unemp", "rrate"]
+model_vars = list(data.columns)
+data_transformation = {
+    "gdp": "logs",
+    "cpi": "logs",
+    "unemp": "levels",
+    "rrate": "levels",
+}
+
+bvar = bv.BVAR(n_lags=2, model=bv.NaturalConjugate(), stationary=False, random_state=0)
+bvar.optimise_hyperparameters(data)
+bvar.sample(data, N_draws=2000)
+
+# GIRFs: most variables in yoy pct change, rates in level change
 response_types = {var: "pct_change_yoy" for var in model_vars}
 response_types["rrate"] = "level_change"
 response_types["unemp"] = "level_change"
 
-model.compute_girf(
+bvar.compute_girf(
     H=12,
     N_draws=2000,
     data_transformation=data_transformation,
     response_type=response_types,
 )
 
-# Plot responses to a shock in Bank Rate
-model.plot_girf(
-    shock_var="rrate",
-    response_var=["gdp", "cpi", "unemp"],
-)
+bvar.plot_girf(shock_var="rrate", response_var=["gdp", "cpi", "unemp"])
 ```
 
 ## Uncertainty Bands

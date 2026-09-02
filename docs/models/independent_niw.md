@@ -15,6 +15,8 @@ arrays for forecasting with the full posterior state.
     is not supported either (it requires refitting with `point_only=True`). Use
     `optimisation_method="none"` and set hyperparameters manually when constructing `BVAR`.
 
+Constructor arguments (`minnesota`, `soc`, `sur`, `covid`, `covid_dates`) are documented on [`SamplingModel`](index.md#bvar.models.SamplingModel); `soc` and `sur` default to `True`.
+
 ## Prior Structure
 
 $$\beta \,\sim\, \mathcal{N}(\beta_0, V_\beta)$$
