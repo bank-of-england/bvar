@@ -1,5 +1,23 @@
 # Estimation
 
+## First forecast in ten lines
+
+```python
+import bvar as bv
+
+data, _, _, _ = bv.simulate_var(T=200, n=3, n_lags=2, levels=True, seed=42)
+
+model = bv.NaturalConjugate(minnesota=True, soc=True, sur=True)
+bvar = bv.BVAR(n_lags=2, model=model, stationary=False, random_state=42)
+
+bvar.optimise_hyperparameters(data)
+bvar.sample(data, N_draws=5000)
+bvar.forecast(H=8)
+bvar.plot_forecast()
+```
+
+This is the canonical minimal workflow; the sections below expand on each step.
+
 ## Workflow
 
 Estimation proceeds in two steps:

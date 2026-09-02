@@ -48,6 +48,7 @@ dependencies = [
 Homepage = "https://github.com/bank-of-england/bvar"
 Repository = "https://github.com/bank-of-england/bvar"
 Issues = "https://github.com/bank-of-england/bvar/issues"
+Documentation = "https://bank-of-england.github.io/bvar/"
 
 [project.optional-dependencies]
 dev = [
@@ -58,6 +59,7 @@ dev = [
     "ruff",
     "pytest",
     "pytest-xdist",
+    "opera-eco[test]",
 ]
 
 docs = [

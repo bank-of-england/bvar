@@ -1,7 +1,7 @@
 """Shared fixtures for the bvar test suite.
 
 Fitting a ``NaturalConjugate`` BVAR requires costly hyperparameter
-optimisation with multiple restarts and a 10,000-draw posterior sample.
+optimisation with multiple restarts and a 5,000-draw posterior sample.
 The suite previously ran this work as module-level code in
 ``test_forecast.py`` (and, unused, in ``test_skew_normal.py``), which meant
 pytest therefore paid the cost at *collection* time whenever it imported the
@@ -10,14 +10,13 @@ module, even when it selected no test from that module.
 The fixture defers this cost until a selected test requests it. Its
 ``scope="session"`` setting runs the fit at most once per test session.
 
-The tests share the fitted instance. Posterior draws
-(``beta``/``sigma``) are never mutated after fitting, and ``forecast()``/
-``recursive_forecast()`` overwrite their own ``forecast_*`` outputs on every
-call, so nothing leaks between tests there. The only shared mutable state
-The shared mutable state is ``rng``; each test controls it by passing
-``random_state=SEED`` to its first stochastic call. This keeps results
-deterministic and independent of execution order without copying the large
-posterior draw arrays.
+The tests share the fitted instance. Posterior draws (``beta``/``sigma``) are
+never mutated after fitting, and ``forecast()`` / ``recursive_forecast()``
+overwrite their own ``forecast_*`` outputs on every call, so nothing leaks
+between tests there. The only shared mutable state is ``rng``; each test
+controls it by passing ``random_state=SEED`` to its first stochastic call.
+This keeps results deterministic and independent of execution order without
+copying the large posterior draw arrays.
 """
 
 import numpy as np

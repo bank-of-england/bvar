@@ -2,7 +2,7 @@
 
 ## Requirements
 
-The package requires Python 3.9 or later. The main runtime dependencies are standard scientific Python libraries: `numpy`, `scipy`, `pandas`, `matplotlib`, `numba`, and `tqdm`. These are installed automatically.
+The package requires Python 3.10 or later. The main runtime dependencies are standard scientific Python libraries: `numpy`, `scipy`, `pandas`, `matplotlib`, `numba`, and `tqdm`. These are installed automatically.
 
 ## Installing from PyPI
 
@@ -17,8 +17,8 @@ pip install bvar
 Clone the repository and install in editable mode:
 
 ```bash
-git clone <repo-url>
-cd ma-forecast-bvar
+git clone https://github.com/bank-of-england/bvar.git
+cd bvar
 pip install -e .
 ```
 

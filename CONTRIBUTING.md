@@ -46,46 +46,56 @@ sections when you need to check those artefacts.
 pytest
 ```
 
+### Running the ecosystem tests
+
+The `dev` extra installs `opera-eco[test]`, so the ecosystem gate can be run
+locally. Build the wheel, overlay it on the pinned ecosystem, and run
+opera-eco's shared contract and pipeline tests:
+
+```bash
+pytest --pyargs opera.tests -m contract -vv
+pytest --pyargs opera.tests -m pipeline -vv
+```
+
 ## Development Workflow
 
 ### Branch Strategy
 
-- **`main`**: Production-ready code
-- **Feature branches**: `feature/your-feature-name`
-- **Bug fixes**: `fix/issue-description`
-- **Documentation**: `docs/topic-name`
+- **`main`** — protected, release-only. No direct pushes; changes arrive by pull request from `dev`.
+- **`dev`** — integration branch. Open feature and fix branches from `dev` and merge them back into `dev`.
+- **Feature branches**: `feature/<issue>`
+- **Bug fixes**: `fix/<issue>`
+- **Documentation**: `docs/<topic>`
 
 ## Protected Branches and Pull Requests
 
-All contributions must be submitted through a pull request. The `main` branch
-is protected, so contributors cannot push changes directly to it. Create a
-branch from `main`, commit and push your changes there, then open a pull request
-targeting `main`. The required check is the `package-quality` workflow, which
-must pass before the pull request can merge.
+All contributions must be submitted through a pull request. The `main` is protected, so contributors cannot push changes directly to it.
+
+Branch out from `dev`, commit and push your changes there, then open a pull request targeting `dev`.
+
+### PR checks
+
+- **`package-quality`** — builds and inspects the distribution, runs Ruff lint and format checks, verifies the generated API docs, builds the documentation site in strict mode, and runs the test suite. This workflow must pass.
+- **`ecosystem`** ("Ecosystem gate") — builds this module's wheel, installs it into the ecosystem pinned by `opera-eco[test]`, and runs opera-eco's shared contract and pipeline tests.
 
 ### Creating a Feature Branch
 
 ```bash
-git checkout main
-git pull origin main
-git checkout -b feature/your-feature-name
-```
-
-### Keeping Your Branch Updated
-
-```bash
-git checkout main
-git pull origin main
-git checkout feature/your-feature-name
-   git rebase main  # Merge main instead when necessary.
+git checkout dev
+git pull origin dev
+git checkout -b feature/xyz
 ```
 
 ### Commit your changes
 
+Use [Conventional Commit](https://www.conventionalcommits.org/) subjects
+(`fix:`, `feat:`, `deps:`, `docs:`, `chore:`, ...); Release Please builds the
+changelog and the next version from them.
+
 ```bash
 git add .
-git commit -m "describe your changes"
-   git push  # Or specify the branch explicitly.
+git commit -m "fix: describe your change"
+git push
 ```
 
 ## Code Standards
@@ -106,12 +116,6 @@ ruff check . --fix
 
 # Check formatting without changing files.
 ruff format --check .
-
-# Build the package.
-python -m build
-
-# Build the documentation.
-zensical build
 ```
 
 ## Documentation
@@ -172,52 +176,49 @@ ruff check .
 pytest
 ```
 
-6. **Commit and push the changes.**
+6. **Commit and push the changes** with a Conventional Commit subject.
 ```bash
 git add .
-git commit -m "Fixes #1: Describe your changes"
-git push origin fix/#1-prior
+git commit -m "fix: describe your change (#1)"
+git push origin fix/1-prior
 ```
 
 7. **Submit a pull request.**
 
 ## Creating a Release (for maintainers)
 
-The release automation starts when you push a version tag. The tag must use
-the `v<version>` format and match the version in `pyproject.toml`.
+Releases are automated with [Release Please](https://github.com/googleapis/release-please).
+`release-please.yml` watches `main` for [Conventional Commits](https://www.conventionalcommits.org/)
+and opens or updates a release pull request carrying the next version and the
+generated `CHANGELOG.md` entries. Only recognised subject types
+(`fix:`, `feat:`, `deps:`, ...) are picked up; an untyped subject is ignored.
 
-For example, to release version `0.1.1`:
+`release-please-config.json` sets an `always-bump-patch` strategy, so every
+release is a patch bump: `fix:`, `feat:`, `deps:`, and breaking commits all
+take `0.3.1` to `0.3.2`. Commit types still organise the changelog but do not
+change the version bump. A `Release-As: 0.4.0` footer on a typed commit is an
+exact one-time override; it is not needed for normal changes.
 
-1. Update `version` in `pyproject.toml` to `0.1.1`.
-2. Move the relevant notes from the `Unreleased` section of `CHANGELOG.md` to
-   a `0.1.1` section.
-3. Run the quality checks locally:
+`release-please.yml` enables auto-merge on the release pull request, so GitHub
+merges it once the required `package-quality` and `ecosystem` checks and branch
+protection pass. Keep work on `dev` until it is ready for the automatic release
+path through `main`.
 
-```bash
-ruff check .
-ruff format --check .
-python scripts/generate_api_docs.py
-git diff --exit-code -- docs/api.md
-pydoclint --style=numpy .
-zensical build --clean --strict
-pytest
-```
+When the release pull request merges, Release Please creates the `v<version>`
+tag and the GitHub Release. The published release then starts:
 
-4. Commit the version and changelog updates, then create the matching tag:
+- `publish-pypi.yml` — builds the distribution and publishes it to PyPI, then
+  triggers `update-ecosystem.yml` to re-pin `bvar` in `opera-eco`.
+- `deploy-docs.yml` — builds the documentation site and deploys it to GitHub Pages.
 
-```bash
-git add pyproject.toml CHANGELOG.md
-git commit -m "Prepare release 0.1.1"
-git tag v0.1.1
-git push origin main v0.1.1
-```
+Both also support manual dispatch against an existing tag.
 
-Pushing the tag starts `.github/workflows/create-release.yml`. That workflow calls the reusable quality workflow and creates the GitHub Release only when Ruff, API documentation checks, pydoclint, the strict Zensical build, and the full test suite pass. A failed check prevents release creation.
+### One-time setup
 
-When GitHub publishes the release, two workflows start automatically:
-
-- `publish-pypi.yml` builds the distribution and publishes it to PyPI.
-- `deploy-docs.yml` builds the documentation site and deploys it to GitHub Pages.
-
-The release workflow generates GitHub release notes from the commit history.
-Keep `CHANGELOG.md` up to date as the project record; the workflow does not edit that file automatically. The `workflow_dispatch` options in the individual workflows provide manual operations and do not replace the normal tagged-release sequence.
+- Add a `RELEASE_PLEASE_TOKEN` repository secret: a token that can write
+  contents, issues, pull requests, tags, and releases. A plain `GITHUB_TOKEN`
+  will not do, because the release it creates must be able to trigger the
+  downstream publication and documentation workflows.
+- Enable **Allow auto-merge** in the repository settings.
+- Require the `package-quality` (and `ecosystem`) checks on `main`, and make
+  sure required human reviews do not block the automation pull requests.

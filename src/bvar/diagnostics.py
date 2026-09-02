@@ -8,6 +8,7 @@ and visualisation of estimation results.
 
 from typing import Optional
 
+import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -17,7 +18,7 @@ def mcmc_posterior(
     true_pars: Optional[np.ndarray] = None,
     max_cols: int = 3,
     figsize_per_plot: tuple = (5, 3),
-) -> None:
+) -> matplotlib.figure.Figure:
     """
     Plot posterior distributions (histograms) for MCMC draws of parameters.
 
@@ -35,8 +36,8 @@ def mcmc_posterior(
 
     Returns
     -------
-    None
-        Displays the posterior distribution plots.
+    matplotlib.figure.Figure
+        The figure containing the posterior-distribution subplots.
     """
     # Get dimensions
     n_draws, n_params = draws.shape
@@ -72,4 +73,4 @@ def mcmc_posterior(
         fig.delaxes(axes[j])
 
     plt.suptitle("Posterior Distributions")
-    plt.show()
+    return fig

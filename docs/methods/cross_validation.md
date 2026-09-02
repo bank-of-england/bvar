@@ -29,8 +29,8 @@ $$\Lambda(\lambda) = \sum_{t=t_0}^{T-p-H} \log p(y_{t+p+H} \mid y_{1:t+p}, \lamb
 Cross-validation can optimise:
 
 - **Minnesota prior parameters**: $c_1$ (overall tightness), $c_3$ (lag decay)
-- **SOC prior parameter**: $\mu$ (sum-of-coefficients tightness) — if `priors.soc=True`
-- **SUR prior parameter**: $\theta$ (single-unit-root tightness) — if `priors.sur=True`
+- **SOC prior parameter**: $\mu$ (sum-of-coefficients tightness) — when `model.soc=True`
+- **SUR prior parameter**: $\theta$ (single-unit-root tightness) — when `model.sur=True`
 
 A grid search covers the parameter space. The default grid sizes are:
 - $c_1 \in [0.001, 1.0]$ (20 points)
@@ -43,6 +43,10 @@ By default, the method averages predictive likelihood across all BVAR variables.
 
 ## Usage Example
 
+> **Runtime.** The default grid is `c1`x`c3`x`mu`x`theta` = 20*5*11*11 = 12,100
+> points, each with one expanding-window pass; a full run takes on the order of
+> an hour. Use a small grid while iterating.
+
 ```python
 import bvar as bv
 
@@ -54,7 +58,11 @@ model = bv.NaturalConjugate(minnesota=True, soc=True, sur=True)
 
 # Use cross-validation instead of marginal likelihood
 bvar = bv.BVAR(
-    n_lags=2, model=model, stationary=False, optimisation_method="cross_validation"
+    n_lags=2,
+    model=model,
+    stationary=False,
+    optimisation_method="cross_validation",
+    random_state=42,
 )
 
 # Optimise hyperparameters via expanding-window predictive likelihood
@@ -62,7 +70,11 @@ bvar = bv.BVAR(
 bvar.optimise_hyperparameters(
     data,
     target_series=[data.columns[0]],
-    cv_options={"H": 8, "oos_test_window_size": 20},
+    cv_options={
+        "H": 8,
+        "oos_test_window_size": 20,
+        "grid": {"c1": 6, "c3": 3, "mu": 3, "theta": 3},
+    },
 )
 
 # Estimate and forecast with the optimised hyperparameters

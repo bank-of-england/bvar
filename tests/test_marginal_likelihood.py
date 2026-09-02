@@ -138,12 +138,12 @@ def test_objective_function():
         sur=False,
     )
 
-    # Reference value for the deterministic data and NIW prior above.
-    true_value = np.float64(2811.8847567533517)
-
-    assert np.abs(output - true_value) < 1e-2, (
-        "Objective function did not return expected value."
-    )
+    # Golden-value regression guard: `objective_function` returns the negative
+    # log marginal likelihood (+ hyperprior terms) for the deterministic (Y, Z)
+    # above. If a numerical refactor changes this, re-derive the value and
+    # update deliberately; cross-check against
+    # test_marginal_likelihood_equals_sum_predictive_densities.
+    assert output == pytest.approx(2811.8847567533517, abs=1e-2)
 
 
 def test_marginal_likelihood_equals_sum_predictive_densities():

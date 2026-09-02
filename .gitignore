@@ -5,7 +5,11 @@ __pycache__/
 
 # AI stuff:
 .github/copilot-instructions.md
+.claude/
 /plans
+
+.ruff_cache/
+__marimo__/
 
 # vscode:
 .vscode/

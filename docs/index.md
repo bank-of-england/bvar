@@ -17,22 +17,7 @@ A versatile package for Bayesian Vector Autoregressions (BVARs). It supports mac
 
 ## Quick Start
 
-```python
-import bvar as bv
-
-# Simulate some data
-data, _, _, _ = bv.simulate_var(T=200, n=3, n_lags=2, levels=True, seed=42)
-
-# Set up the sampling model and BVAR
-model = bv.NaturalConjugate(minnesota=True, soc=True, sur=True)
-bvar = bv.BVAR(n_lags=2, model=model, stationary=False)
-
-# Optimise, estimate, and forecast
-bvar.optimise_hyperparameters(data)
-bvar.sample(data, N_draws=5000)
-bvar.forecast(H=8)
-bvar.plot_forecast()
-```
+See [First forecast in ten lines](guide/estimation.md#first-forecast-in-ten-lines) in the user guide.
 
 ## Installation
 

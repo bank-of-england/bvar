@@ -61,7 +61,9 @@ def simulate_var(
     Returns
     -------
     y : pd.DataFrame
-        Simulated time series data with shape ``(T, n)``.
+        Simulated time series data with shape ``(T, n)`` and a quarterly
+        ``pd.PeriodIndex`` starting 1990Q1 (COVID dummies, when enabled, assume
+        the 2020Q1-2021Q4 window). Re-index the frame for a different frequency.
     b : np.ndarray
         True parameter vector with shape
         ``(n * (1 + n*n_lags + h),)`` where ``h`` is 8 when COVID dummies are
@@ -498,6 +500,11 @@ def cumulative_change(data: np.ndarray, levels: np.ndarray) -> np.ndarray:
     ------
     ValueError
         If the variables are a mix of levels and differences.
+
+    Notes
+    -----
+    Returns the cumulative sum of first differences of a levels or
+    log-difference series (the first row is dropped as it is not a forecast).
     """
 
     if np.sum(levels) == 0:

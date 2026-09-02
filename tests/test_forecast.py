@@ -1,9 +1,9 @@
 from copy import deepcopy
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
+from scipy.stats import skew
 
 from bvar.BVAR import BVAR
 from bvar.forecast.mixin import Forecasting
@@ -770,8 +770,6 @@ def test_conditional_skewness(bvar):
     )
 
     # check skewness
-    from scipy.stats import skew
-
     skew_forecast = skew(forecast_constrained_var)
     skew_constraint = skew(constraint)
 
@@ -808,18 +806,11 @@ def test_conditional_skewness_renzetti(bvar):
 
     forecast_skew = bvar.forecast_conditional
 
-    plt.figure(figsize=(8, 6))
-    plt.hist(forecast_skew[:, T, :], bins=100, alpha=0.7, edgecolor="black")
-    plt.grid(True)
-    # plt.show()
-    # plt.close()
-
-    # compute the skewness of the constrained variable
-    from scipy.stats import skew
-
-    forecast_constrained_var = forecast_skew[:, T, 0]
-    skew_forecast = skew(forecast_constrained_var)
-    print(f"Skewness of constrained variable: {skew_forecast}")
+    assert np.isfinite(forecast_skew).all()
+    # the shape constraint is applied to the second variable; its retained
+    # draws must show clear positive skew under the labonne_renzetti sampler.
+    skew_forecast = skew(forecast_skew[:, T, 1])
+    assert skew_forecast > 0.3, f"expected clear positive skew, got {skew_forecast:.3f}"
 
 
 def test_mean_forecast_unconditional(bvar):
@@ -1140,3 +1131,26 @@ def test_conditional_forecast_point_only_does_not_call_sample_posterior_state(
 
     assert calls == []
     assert bvar.forecast_conditional.shape[0] == 1
+
+
+def test_nowcast_soft_constraint_matches_requested_moments(bvar):
+    H, n, T = 4, bvar.n, bvar.T
+    nowcast_mean, nowcast_var = 0.5, 0.3**2
+
+    cm = np.full((H, n), np.nan)
+    cm[0, 0] = nowcast_mean
+    cv = np.full((H, n), np.nan)
+    cv[0, 0] = nowcast_var
+
+    bvar.forecast(
+        H=H, constraint_mean=cm, constraint_variance=cv, N_draws=4000, random_state=1234
+    )
+    step0 = bvar.forecast_conditional[:, T, 0]
+    assert abs(step0.mean() - nowcast_mean) < 0.1
+    assert abs(step0.var() - nowcast_var) < 0.05
+
+    cv[0, 0] = 0.0
+    bvar.forecast(
+        H=H, constraint_mean=cm, constraint_variance=cv, N_draws=4000, random_state=1234
+    )
+    assert bvar.forecast_conditional[:, T, 0].var() < 1e-6

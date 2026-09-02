@@ -92,8 +92,12 @@ class GridSearch:
         cv_method : str
             Cross-validation method. Only supports "predictive_ml".
         cv_options : Optional[dict]
-            Options for cross-validation including H (forecast horizon),
-            oos_test_window_size. Default is None.
+            Options for cross-validation. Required keys: ``H`` (forecast
+            horizon) and ``oos_test_window_size``. Optional key ``grid``: a
+            dict mapping hyperparameter names (``c1``, ``c3``, ``mu``,
+            ``theta``) to the number of points to keep on that axis, evenly
+            spaced across the model's default grid, to coarsen the search.
+            Default is None.
         target_indices : Optional[List[int]]
             Indices of target variables for evaluation. If ``None``, the method
             uses every variable.
@@ -187,6 +191,38 @@ class GridSearch:
 
         # generate grid from the model's hyperparameter space
         grid = self.model.hyperparameter_grid()
+
+        # Optionally coarsen the grid for a faster run. ``cv_options["grid"]``
+        # maps hyperparameter names to the number of points to keep, evenly
+        # spaced across each default axis. Names follow ``fill_in_from_vector``
+        # order: ``c1``, ``c3``, then ``mu`` (if ``soc``) and ``theta`` (if
+        # ``sur``).
+        grid_sizes = cv_options.get("grid")
+        if grid_sizes is not None:
+            names = ["c1", "c3"]
+            if self.model.soc:
+                names.append("mu")
+            if self.model.sur:
+                names.append("theta")
+            unknown = set(grid_sizes) - set(names)
+            if unknown:
+                raise ValueError(
+                    f"cv_options['grid'] has unknown keys {sorted(unknown)}; "
+                    f"expected a subset of {names}."
+                )
+            for axis, name in enumerate(names):
+                if name not in grid_sizes:
+                    continue
+                n_points = _validate_positive_integer(
+                    grid_sizes[name], f"cv_options['grid']['{name}']"
+                )
+                axis_values = grid[axis]
+                n_points = min(n_points, len(axis_values))
+                keep = np.unique(
+                    np.linspace(0, len(axis_values) - 1, n_points).round().astype(int)
+                )
+                grid[axis] = axis_values[keep]
+
         grid_size = int(np.prod([len(g) for g in grid]))
 
         target_indices = self._validate_target_indices(data, target_indices)

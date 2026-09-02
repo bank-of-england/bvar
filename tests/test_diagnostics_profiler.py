@@ -12,22 +12,16 @@ from bvar.diagnostics import mcmc_posterior
 from bvar.profiler import profile_code
 
 
-def test_mcmc_posterior_handles_one_parameter_without_interactive_display(
-    monkeypatch,
-):
-    """A one-parameter posterior renders without opening an interactive window."""
-    shown = []
-    monkeypatch.setattr(plt, "show", lambda: shown.append(True))
+def test_mcmc_posterior_handles_one_parameter_without_interactive_display():
+    """A one-parameter posterior renders and returns its figure."""
     draws = np.arange(20.0).reshape(10, 2)[:, :1]
 
     try:
-        mcmc_posterior(draws, true_pars=np.array([4.0]))
-        assert shown == [True]
-        assert len(plt.gcf().axes) == 1
+        fig = mcmc_posterior(draws, true_pars=np.array([4.0]))
+        assert isinstance(fig, plt.Figure)
+        assert len(fig.axes) == 1
         true_lines = [
-            line
-            for line in plt.gcf().axes[0].lines
-            if line.get_label().startswith("True:")
+            line for line in fig.axes[0].lines if line.get_label().startswith("True:")
         ]
         assert len(true_lines) == 1
         np.testing.assert_allclose(true_lines[0].get_xdata(), [4.0, 4.0])
@@ -35,15 +29,14 @@ def test_mcmc_posterior_handles_one_parameter_without_interactive_display(
         plt.close("all")
 
 
-def test_mcmc_posterior_removes_unused_subplot_axes(monkeypatch):
+def test_mcmc_posterior_removes_unused_subplot_axes():
     """Several parameters leave no unused axes in the subplot grid."""
-    monkeypatch.setattr(plt, "show", lambda: None)
     draws = np.arange(50.0).reshape(10, 5)
     true_pars = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
     try:
-        mcmc_posterior(draws, true_pars=true_pars, max_cols=3)
-        axes = plt.gcf().axes
+        fig = mcmc_posterior(draws, true_pars=true_pars, max_cols=3)
+        axes = fig.axes
         assert len(axes) == len(true_pars)
         plotted_true_values = [
             line.get_xdata()[0]
