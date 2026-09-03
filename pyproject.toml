@@ -58,7 +58,6 @@ dev = [
     "ruff",
     "pytest",
     "pytest-xdist",
-    "opera-eco[test]",
 ]
 
 docs = [
