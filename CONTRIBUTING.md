@@ -231,7 +231,5 @@ Both also support manual dispatch against an existing tag.
   will not do, because the release it creates must be able to trigger the
   downstream publication and documentation workflows.
 - Enable **Allow auto-merge** in the repository settings.
-- Require the `package-quality` check on `main` (not `ecosystem` — it is
-  skipped on release pull requests, and a skipped required check blocks
-  auto-merge), and make sure required human reviews do not block the
-  automation pull requests.
+- In the `github-pages` environment, keep the `main` deployment branch rule and add a `v*` tag rule. Release-triggered documentation runs use the release tag and are rejected before deployment when that tag is not allowed.
+- Require the `package-quality` check on `main` (not `ecosystem` — it is skipped on release pull requests, and a skipped required check blocks auto-merge), and make sure required human reviews do not block the automation pull requests.
