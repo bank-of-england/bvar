@@ -51,7 +51,10 @@ Issues = "https://github.com/bank-of-england/bvar/issues"
 Documentation = "https://bank-of-england.github.io/bvar/"
 
 [project.optional-dependencies]
+# ``dev`` is the full contributor set: tooling plus everything the quality
+# checks need, so ``pip install -e ".[dev]"`` is all that is required.
 dev = [
+    "bvar[docs,notebooks]",
     "pre-commit",
     "pydoclint",
     "pyarrow",

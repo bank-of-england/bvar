@@ -1,16 +1,9 @@
 name: Package quality
 
-# Run quality checks for pull requests, branch pushes, or a manual run.
+# Run quality checks for pull requests targeting main or dev.
 on:
   pull_request:
     branches: [main, dev]
-  workflow_dispatch:
-  workflow_call:
-    inputs:
-      ref:
-        description: "Git ref to check out"
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -22,8 +15,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
-        with:
-          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
@@ -31,10 +22,10 @@ jobs:
           python-version: "3.13"
           cache: pip
 
-      - name: Install package, development, and documentation dependencies
+      - name: Install package and development dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev,docs,notebooks]" build twine
+          python -m pip install -e ".[dev]" build twine
 
       - name: Build and inspect distribution
         run: |

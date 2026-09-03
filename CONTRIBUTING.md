@@ -8,12 +8,14 @@ cd bvar
 ```
 
 2. **Set up the development environment**
+
+Create and activate a fresh environment, then install the package with the
+full contributor dependency set:
 ```bash
-conda create --name bvar
-conda activate bvar
-conda install pip
-pip install -e ".[dev, docs, notebooks]"  # Install development and notebook dependencies.
+pip install -e ".[dev]"
 ```
+The `dev` extra pulls in the docs and notebook dependencies as well, so this
+is the only install command you need.
 
 3. **Install pre-commit hooks**
 ```bash
@@ -125,12 +127,9 @@ declaration. `docs/api.md` is the generated manifest that connects those
 objects to the API reference; edit the source docstrings and public exports,
 not the generated directives in that file.
 
-Install the documentation dependencies in an existing development
-environment with:
-
-```bash
-pip install -e ".[docs]"
-```
+The documentation dependencies are already installed with the `dev` extra
+(`pip install -e ".[dev]"`); `.[docs]` installs just those if you need a
+docs-only environment.
 
 Regenerate the API manifest explicitly when needed:
 
@@ -184,6 +183,17 @@ git push origin fix/1-prior
 
 7. **Submit a pull request.**
 
+## GitHub Actions workflows
+
+The workflows in `.github/workflows/`:
+
+- **`package-quality.yml`** — on every PR to `main`/`dev`: lint, docs, build, and the full test suite Required.
+- **`ecosystem.yml`** — on every PR to `main`/`dev` (skipped on release PRs): runs opera-eco's shared contract and pipeline tests against this module. Optional.
+- **`release-please.yml`** — When a PR merges into `main`: opens/updates the release PR and, once merged, tags it and creates the GitHub Release.
+- **`publish-pypi.yml`** — on a published Release: builds and publishes to PyPI.
+- **`deploy-docs.yml`** — on a published Release: deploys the docs site.
+- **`update-ecosystem.yml`** — after publishing: bumps this module's pin in `opera-eco`.
+
 ## Creating a Release (for maintainers)
 
 Releases are automated with [Release Please](https://github.com/googleapis/release-please).
@@ -199,9 +209,11 @@ change the version bump. A `Release-As: 0.4.0` footer on a typed commit is an
 exact one-time override; it is not needed for normal changes.
 
 `release-please.yml` enables auto-merge on the release pull request, so GitHub
-merges it once the required `package-quality` and `ecosystem` checks and branch
-protection pass. Keep work on `dev` until it is ready for the automatic release
-path through `main`.
+merges it once the required `package-quality` check and branch protection pass.
+The `ecosystem` gate is deliberately skipped on Release Please pull requests
+(the version bump makes the candidate wheel run ahead of the pinned ecosystem),
+so it must not be a required check. Keep work on `dev` until it is ready for the
+automatic release path through `main`.
 
 When the release pull request merges, Release Please creates the `v<version>`
 tag and the GitHub Release. The published release then starts:
@@ -219,5 +231,7 @@ Both also support manual dispatch against an existing tag.
   will not do, because the release it creates must be able to trigger the
   downstream publication and documentation workflows.
 - Enable **Allow auto-merge** in the repository settings.
-- Require the `package-quality` (and `ecosystem`) checks on `main`, and make
-  sure required human reviews do not block the automation pull requests.
+- Require the `package-quality` check on `main` (not `ecosystem` — it is
+  skipped on release pull requests, and a skipped required check blocks
+  auto-merge), and make sure required human reviews do not block the
+  automation pull requests.
