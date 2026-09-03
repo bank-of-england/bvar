@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.3.2](https://github.com/bank-of-england/bvar/compare/v0.3.1...v0.3.2) (2026-09-03)
+
+
+### Features
+
+* coarsen the cross-validation grid via cv_options["grid"] ([efe4d98](https://github.com/bank-of-england/bvar/commit/efe4d98f3abdcc61af22415e83c2a067fca3f39a))
+* expose bvar.version from package metadata ([efe4d98](https://github.com/bank-of-england/bvar/commit/efe4d98f3abdcc61af22415e83c2a067fca3f39a))
+* return the matplotlib Figure from plot/diagnostic helpers instead of plt.show() ([efe4d98](https://github.com/bank-of-england/bvar/commit/efe4d98f3abdcc61af22415e83c2a067fca3f39a))
+* show a progress bar during cross-validation optimisation ([efe4d98](https://github.com/bank-of-england/bvar/commit/efe4d98f3abdcc61af22415e83c2a067fca3f39a))
+
+
+### Bug Fixes
+
+* raise RuntimeError when forecast() is called before sample() ([efe4d98](https://github.com/bank-of-england/bvar/commit/efe4d98f3abdcc61af22415e83c2a067fca3f39a))
+
+
+### Dependencies
+
+* add opera-eco[test] to the dev extra for local ecosystem runs ([efe4d98](https://github.com/bank-of-england/bvar/commit/efe4d98f3abdcc61af22415e83c2a067fca3f39a))
+
+
+### Documentation
+
+* add Documentation project URL and clarify prior/simulate_var/cumulative_change docstrings ([efe4d98](https://github.com/bank-of-england/bvar/commit/efe4d98f3abdcc61af22415e83c2a067fca3f39a))
+
 ## 0.3.1
 
 First public release.
