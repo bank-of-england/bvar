@@ -2,11 +2,15 @@ name: OPERA ecosystem pipelines
 
 # Build this module's wheel, install it into the ecosystem pinned by
 # opera-eco[test], and run opera-eco's shared contract and pipeline tests.
+#
+# Runs only on pull requests targeting main or dev, and is skipped for
+# Release Please pull requests: those only bump the version and changelog, so
+# the candidate wheel is one patch ahead of the pinned ecosystem and
+# opera-eco's skill-version check would fail on that gap alone.
 
 on:
   pull_request:
     branches: [main, dev]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,6 +18,7 @@ permissions:
 jobs:
   ecosystem:
     name: Ecosystem gate
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
 
     steps:
