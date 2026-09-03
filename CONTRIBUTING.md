@@ -48,11 +48,10 @@ pytest
 
 ### Running the ecosystem tests
 
-The `dev` extra installs `opera-eco[test]`, so the ecosystem gate can be run
-locally. Build the wheel, overlay it on the pinned ecosystem, and run
-opera-eco's shared contract and pipeline tests:
+Run the ecosystem gate locally with:
 
 ```bash
+pip install "opera-eco[test]"
 pytest --pyargs opera.tests -m contract -vv
 pytest --pyargs opera.tests -m pipeline -vv
 ```
