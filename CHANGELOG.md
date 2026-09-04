@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/bank-of-england/bvar/compare/v0.3.2...v0.3.3) (2026-09-04)
+
+
+### Documentation
+
+* document GitHub Pages release setup in CONTRIBUTING ([dbc8ba3](https://github.com/bank-of-england/bvar/commit/dbc8ba3b699a864f3a1d231bc5a98f0062bc2fcf))
+
 ## [0.3.2](https://github.com/bank-of-england/bvar/compare/v0.3.1...v0.3.2) (2026-09-03)
 
 
