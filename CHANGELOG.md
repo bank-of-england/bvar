@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.3](https://github.com/bank-of-england/bvar/compare/v0.3.2...v0.3.3) (2026-09-10)
+
+
+### Features
+
+* added JAX implementation for ML optim ([6e26ab1](https://github.com/bank-of-england/bvar/commit/6e26ab13ced832c1e505311f7184e944d4b71750))
+* improved ML optim speed ([ea73e2b](https://github.com/bank-of-england/bvar/commit/ea73e2b6da7b472b6580b124acd843c38032fb3d))
+
+
+### Documentation
+
+* document GitHub Pages release setup in CONTRIBUTING ([dbc8ba3](https://github.com/bank-of-england/bvar/commit/dbc8ba3b699a864f3a1d231bc5a98f0062bc2fcf))
+
 ## [0.3.2](https://github.com/bank-of-england/bvar/compare/v0.3.1...v0.3.2) (2026-09-03)
 
 
