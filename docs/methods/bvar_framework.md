@@ -76,7 +76,7 @@ $$[V_A^{-1}]_{ij,\ell} = \frac{c_1^2}{\ell^{\,c_3} \cdot s_i}$$
 
 where $c_1$ is the overall tightness, $c_3$ controls lag decay, and $s_i$ is the residual variance from a univariate AR(1) for variable $i$ (scaling puts shrinkage on a common scale). Intercepts and COVID dummies receive fixed, loose prior variances.
 
-The prior scale matrix $S_0$ is set to $\text{diag}(s_1, \ldots, s_n) \times (\nu_0 - n - 1)$ with $\nu_0 = n + 4$, so that the prior mean of $\Sigma$ equals the AR(1) residual variances.
+The prior scale matrix $S_0$ is set to $\text{diag}(s_1, \ldots, s_n) \times (\nu_0 - n - 1)$ with $\nu_0 = n + 2$, following Giannone, Lenza and Primiceri (2015). This makes the prior mean of $\Sigma$ equal to the AR(1) residual variances.
 
 ### Sum-of-Coefficients Prior
 

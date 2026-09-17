@@ -509,7 +509,7 @@ class BVAR(Forecasting, GIRF, PlotBVAR, PlotGIRF, GridSearch):
 
         # Prior hyperparameters for covariance matrix ====================================
         if self.model.pars.nu_0 is None:
-            self.model.pars.nu_0 = n + 4
+            self.model.pars.nu_0 = n + 2
 
         if self.model.pars.S_0 is None:
             self.model.pars.S_0 = np.eye(n) * (self.model.pars.nu_0 - n - 1)

@@ -54,7 +54,7 @@ class NaturalConjugate(SamplingModel):
         self, data: np.ndarray, n: int, covid_indices: np.ndarray
     ) -> Tuple[np.ndarray, float]:
         """Initialise the IW scale matrix from AR(1) OLS residuals."""
-        nu_0 = n + 4 if self.pars.nu_0 is None else self.pars.nu_0
+        nu_0 = n + 2 if self.pars.nu_0 is None else self.pars.nu_0
 
         mse = ar1_mse(data, covid_indices)
         S_0 = np.diag(mse) * (nu_0 - n - 1)
