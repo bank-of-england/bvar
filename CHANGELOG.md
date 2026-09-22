@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/bank-of-england/bvar/compare/v0.3.3...v0.3.4) (2026-09-22)
+
+
+### Bug Fixes
+
+* align inverse-Wishart prior with GLP with nu_0 = n+2 instead of n+4 ([ac5ed1f](https://github.com/bank-of-england/bvar/commit/ac5ed1f5684254168742e961e0038d6aa1c33b5d))
+
 ## [0.3.3](https://github.com/bank-of-england/bvar/compare/v0.3.2...v0.3.3) (2026-09-10)
 
 

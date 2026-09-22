@@ -1,6 +1,6 @@
 [project]
 name = "bvar"
-version = "0.3.3"
+version = "0.3.4"
 
 description = "Bayesian Vector Autoregressions for forecasting"
 
