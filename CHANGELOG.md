@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5](https://github.com/bank-of-england/bvar/compare/v0.3.4...v0.3.5) (2026-09-25)
+
+
+### Documentation
+
+* removed redundant files ([781b9de](https://github.com/bank-of-england/bvar/commit/781b9de21f63b3e4e25b80ffeca02d387394246c))
+
 ## [0.3.4](https://github.com/bank-of-england/bvar/compare/v0.3.3...v0.3.4) (2026-09-22)
 
 
