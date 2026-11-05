@@ -233,7 +233,12 @@ class Forecasting:
         """
         Generate conditional forecasts from the BVAR posterior draws.
 
-        Implementation following Waggoner & Zha (1999) and Antolín-Díaz et al. (2021).
+        Parameter resampling follows the conditional-path Gibbs sampler
+        of Waggoner & Zha (1999), as set out in Miranda-Agrippino & Ricco
+        (2019, Section 3, Algorithm 2, step 2). Each simulated path augments
+        the historical data for the next posterior parameter update. The
+        default constrained-path draw uses Andersson, Palmqvist & Waggoner
+        (2010, Algorithm 1), which matches their Eq. (10) for hard restrictions.
         Supports mean, variance, and shape/skewness constraints on forecasts.
 
         Parameters
@@ -304,6 +309,13 @@ class Forecasting:
 
         References
         ----------
+        Miranda-Agrippino, S., & Ricco, G. (2019). Bayesian Vector
+            Autoregressions: Applications. Oxford Research Encyclopedia
+            of Economics and Finance. Section 3, Eq. (10) and Algorithm 2.
+            https://doi.org/10.1093/acrefore/9780190625979.013.478
+        Andersson, M. K., Palmqvist, S., & Waggoner, D. F. (2010).
+            Density-conditional forecasts in dynamic multivariate models.
+            Sveriges Riksbank Working Paper 243. Algorithm 1.
         Waggoner, D. F., & Zha, T. (1999). Conditional forecasts in dynamic
             multivariate models.
         Antolín-Díaz, J., Petrella, I., & Rubio-Ramírez, J. F. (2021).
@@ -785,8 +797,11 @@ class Forecasting:
         method: str = "andersson_et_al",
     ) -> np.ndarray:
         """
-        Generate conditional forecasts using the Gibbs sampler of
-        Antolín-Díaz et al. (2021).
+        Generate conditional forecasts using the Gibbs data augmentation
+        described by Miranda-Agrippino & Ricco (2019, Section 3, Algorithm 2).
+        Simulated future observations augment the historical sample for
+        each posterior parameter update; the next forecast draw uses the
+        updated parameters.
 
         The method sends the constrained-forecast draw through
         ``self.model.sample_conditional_forecast(...)``, whose default

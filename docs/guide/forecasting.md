@@ -48,11 +48,88 @@ bvar.plot_forecast(var_names=["gdp", "cpi", "unemp"])
 
 Conditional forecasts impose restrictions on a subset of variables over the forecast horizon. Pass these restrictions through `constraint_mean`, a matrix of shape $(H \times n)$ in which `NaN` entries leave variables unrestricted and numeric entries set their values.
 
-The package implements two conditioning approaches through
-`SamplingModel.sample_conditional_forecast`. Its default implementation runs
-the Gaussian constraint algorithms. A model with
+The package supports hard and distributional constraints through
+`SamplingModel.sample_conditional_forecast`. Its default implementation uses
+the shock-adjustment algorithm of Andersson, Palmqvist & Waggoner (2010,
+Algorithm 1), selected by `method="andersson_et_al"`. A model with
 `supports_gaussian_predictive=False` must override this hook for its predictive
 distribution.
+
+### Parameter Uncertainty: Gibbs Sampling
+
+Conditional forecasting resamples the VAR parameters using the simulated
+conditional path. This follows the MCMC sampler in Miranda-Agrippino & Ricco (2019),
+Section 3, Algorithm 2 ([author manuscript, pp. 8-9](https://silviamirandaagrippino.com/s/BVARs_Applications.pdf#page=8)),
+which they attribute to Waggoner & Zha. The method was introduced by Waggoner &
+Zha (1999). The future values are latent variables: they are not observed and
+are sampled jointly with the parameters. The restrictions fix some of them (or
+linear combinations of them), so those enter the parameter update like observed
+data. The remaining values are redrawn each iteration given the current
+parameters, so the chain averages over them. Each iteration:
+
+1. Draws future shocks from their distribution conditional on the restrictions (Eq. 10), given the current parameters, and builds the forecast path (Algorithm 2, step 1).
+2. Appends that path to the historical sample and draws new VAR parameters from their full conditional posteriors, using the chosen model and priors (Algorithm 2, step 2).
+3. Keeps the path and discards the parameters (Algorithm 2, step 3). The new parameters are used in the next iteration; paths before burn-in are dropped.
+
+With $Y$ denoting historical data and $\theta=(A,\Sigma)$, the two Gibbs blocks are
+
+$$y_F^{(s)}\sim p(y_F\mid Y,\theta^{(s-1)},Cy_F=f).$$
+
+$$\theta^{(s)}\sim p(\theta\mid Y,y_F^{(s)}).$$
+
+**Step 1 and Eq. (10).** Miranda-Agrippino & Ricco write the restrictions as
+$Gu=g$ (Eq. 9), with $G=RC_0$ and $g=r-RE(y_F\mid Y,\theta)$, and draw the
+reduced-form shocks from
+
+$$u\mid(Gu=g)\sim\mathcal{N}\!\left(\Sigma_HG'(G\Sigma_HG')^{-1}g,\;
+\Sigma_H-\Sigma_HG'(G\Sigma_HG')^{-1}G\Sigma_H\right).\quad\text{(Eq. 10)}$$
+
+The package works with structural shocks $\varepsilon\sim\mathcal{N}(0,I)$,
+so $\Sigma_H=I$, $G=D=CM^T$ and $g=f-Cb$. The default shock-adjustment draw
+$\varepsilon=\xi+D^+(g-D\xi)$, with $\xi\sim\mathcal{N}(0,I)$, has mean
+$D^+g$ and covariance $I-D^+D$. When $D$ has full row rank,
+$D^+=D'(DD')^{-1}$, so this matches Eq. (10) exactly for hard restrictions.
+
+The rationale is to sample the joint distribution of parameters and future
+observations conditional on the scenario. Miranda-Agrippino & Ricco (p. 9)
+describe step 2 as ensuring "consistency of the posterior distribution with
+the restriction in Eq. (9)": if the restricted path occurs, it carries
+information about the parameters as well as the future shocks. The simulated
+path is redrawn each iteration; it is not permanently added as observed data.
+
+This treats the conditioning path as information about the future, which suits
+conditioning on nowcasts, market expectations or published data. For a purely
+hypothetical policy path, letting the path update the parameters is a modelling
+choice rather than a requirement.
+
+Algorithm 2 covers hard restrictions. For soft or skewed constraints, the
+package uses the same loop but draws the constrained values from the supplied
+distribution in step 1. That extension is ours; it is not part of Algorithm 2.
+
+Other differences from Algorithm 2:
+
+- `NaturalConjugate` draws $(A,\Sigma)$ jointly from the augmented-data
+  posterior; `IndependentNIW` draws $A\mid\Sigma$ and then $\Sigma\mid A$.
+  Algorithm 2 draws $\Sigma$ first. Neither choice changes the target distribution.
+- The chain starts from the fitted point estimate. It runs `N_draws`
+  iterations, capped at the number of stored posterior draws, and drops the
+  first `N_burn`.
+- With sum-of-coefficients or single-unit-root priors, the dummy observations
+  for variables not in levels use the sample mean of $Y$. That sample includes
+  the simulated path, so the prior changes from one iteration to the next.
+  Algorithm 2 keeps the prior fixed.
+
+This differs from drawing parameters once from the historical-data posterior
+and adjusting only future shocks, which leaves parameter uncertainty unchanged
+by the scenario. Two implementations can therefore agree on unconditional
+forecasts yet differ on conditional forecasts if only one performs this Gibbs
+update. Establishing agreement with a particular MATLAB implementation requires
+checking its parameter-update step, not just its forecast recursion.
+
+With `point_only=True`, the package instead computes one conditional path at
+the fitted point parameters without the Gibbs update. The default
+`method="andersson_et_al"` selects the constrained-path draw inside the loop,
+not whether parameters are resampled.
 
 ### Hard Constraints (Waggoner & Zha, 1999)
 
@@ -81,7 +158,7 @@ bvar.plot_forecast(alpha=0.1, from_date="2024Q1")
 
 ### Soft Constraints (Antolín-Díaz et al., 2021)
 
-Soft constraints allow the constrained variables to deviate from the target path subject to a specified degree of uncertainty (`constraint_variance`). This is appropriate when the conditioning information comes from a forecast or nowcast that is itself uncertain. The model treats the constraint as an observation with measurement error, and the unrestricted variables adjust proportionally to their historical co-movement with the constrained ones.
+Soft constraints allow the constrained variables to deviate from the target path subject to a specified degree of uncertainty (`constraint_variance`). This is appropriate when the conditioning information comes from a forecast or nowcast that is itself uncertain. In the default algorithm, each iteration draws a target $z\sim\mathcal{N}(f,\Sigma_f)$ and imposes $Cy=z$ exactly. Thus the supplied distribution specifies the marginal distribution of the constrained path; it is not a noisy-observation likelihood whose target is combined with the VAR forecast through a measurement-error update (Andersson, Palmqvist & Waggoner, 2010; Antolín-Díaz et al., 2021, Section 2.2).
 
 ```python
 # Add uncertainty around the Bank Rate path: ±0.25pp one standard deviation
@@ -139,5 +216,7 @@ Passing a fixed `random_state` (or `rng`) to `forecast`/`recursive_forecast` giv
 
 | Paper | Contribution |
 |---|---|
-| [Waggoner & Zha (1999)](https://www.jstor.org/stable/2646713) | Hard conditional forecasting |
-| [Antolín-Díaz et al. (2021)](https://doi.org/10.1016/j.jmoneco.2020.06.001) | Soft conditional forecasting |
+| [Miranda-Agrippino & Ricco (2019), *Bayesian Vector Autoregressions: Applications*](https://doi.org/10.1093/acrefore/9780190625979.013.478), *Oxford Research Encyclopedia of Economics and Finance* | Conditional-path data augmentation and parameter resampling (Section 3, Algorithm 2; author manuscript, p. 9) |
+| [Waggoner & Zha (1999), *Conditional forecasts in dynamic multivariate models*](https://www.jstor.org/stable/2646713), *Review of Economics and Statistics*, 81(4), 639-651 | Hard conditional forecasting and parameter uncertainty |
+| [Andersson, Palmqvist & Waggoner (2010), *Density-conditional forecasts in dynamic multivariate models*](https://www.econstor.eu/handle/10419/83026), Sveriges Riksbank Working Paper 243 | Default shock-adjustment algorithm (Algorithm 1) and distributional constraints |
+| [Antolín-Díaz, Petrella & Rubio-Ramírez (2021), *Structural scenario analysis with SVARs*](https://doi.org/10.1016/j.jmoneco.2020.06.001), *Journal of Monetary Economics*, 117, 798-815 | Distributional constraints (Section 2.2) and conditional-forecast Gibbs sampling |
